@@ -1,4 +1,4 @@
-from typing import Any, Callable, List, NoReturn, Optional, Union
+from typing import Any, Callable, List, Optional, Union
 
 import flask
 import functools
@@ -11,7 +11,7 @@ Routes = Optional[List[RouteLike]]
 
 
 class Component:
-    """Componenet type.
+    """Component type.
 
     The "Decorator Class" in the decorator design pattern.  Decorator
     classes are called "components" to avoid confusion with python
@@ -21,7 +21,7 @@ class Component:
     concrete class it will act as a pass-through.
     """
 
-    def __init__(self, parent: Parent) -> None:
+    def __init__(self, parent: Any) -> None:
         self.parent = parent
 
     def __getattr__(self, name: str) -> Any:
@@ -51,7 +51,8 @@ def dispatch_request(fn: Callable, decorators: List[Parent], **uri_args: str):
         decorator = decorators.pop()
         handler = decorator(handler)
 
-    # Return the result of the decorated class's __call__ method.
+    # Pass the handler instance into our controller function and return
+    # its result.
     return fn(handler, **uri_args)
 
 
@@ -120,83 +121,19 @@ class Router:
             self.add_routes(route.routes, components, prefix, namespace)
 
         elif isinstance(route, Route):
-            # Construct the route name.
-            name = '{}{}'.format(namespace, route.name) or None
-
             # Construct the URI path.
             path = '{}{}'.format(prefix, route.path)
+
+            # Construct a name for the route or default to the path.
+            name = '{}{}'.format(namespace, route.name) or path
 
             # Concatenate components with the concrete class in last
             # place.
             components = components + route.components + [route.handler]
 
             # Construct a function with the components pre-specified.
-            handler = dispatch_request
-            handler = functools.partial(handler, fn=route.controller, decorators=components)
+            view = dispatch_request
+            view = functools.partial(view, fn=route.controller, decorators=components)
 
             # Add the URL rule.
-            app.add_url_rule(path, name, handler, methods=[route.method])
-
-
-# Define a controller which will execute business logic.
-
-
-def controller(handler, **uri_args):
-    print(handler.test())
-    return 'hello, world!'
-
-
-# Define a handler which will define business logic.
-
-
-class JSONAPIHandler(Handler):
-
-    def test(self, **uri_args):
-        return {'hello': 'world'}
-
-
-# Define some decorators to add behaviors.
-
-
-class A(Component):
-    
-    def test(self, **uri_args):
-        result = self.parent.test(**uri_args)
-        result['A'] = True
-        return result
-
-
-class B(Component):
-    
-    def test(self, **uri_args):
-        result = self.parent.test(**uri_args)
-        result['B'] = True
-        return result
-
-
-# Define a helper class to always pass your handler.
-JSONAPIRoute = functools.partial(Route, handler=JSONAPIHandler)
-
-
-# Define some routes.
-routes = []
-routes.append(
-    Include(
-        '/users', [
-            JSONAPIRoute('/<id>', controller, components=[B], name='test')
-        ],
-        components=[A]
-    )
-)
-
-
-# Test data.
-app = flask.Flask(__name__)
-
-api = Router(app)
-api.add_routes(routes)
-
-with app.app_context():
-    client = app.test_client()
-    get = client.get('/users/1')
-    print(get.data.decode('utf-8'))
+            self.app.add_url_rule(path, name, view, methods=[route.method])
