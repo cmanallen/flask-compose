@@ -8,14 +8,19 @@ from flask import Flask
 from flask_router import Component, Handler, Include, Route, Router
 
 
-# Controllers.
+# Create some controller that takes a handler and does something useful
+# with it.  A handler is the final, decoratored instance.  You should
+# focus your effort on making these controllers as generic as possible.
+#
+# See "examples/efficient_usage.py" for additional implementation
+# details.
 def create_user(handler, **uri_args):
     user = handler.create()
     return str(user)
 
 
 # Handlers.
-class JSONAPIHandler(Handler):
+class MyHandler(Handler):
 
     def create(self):
         return {'hello': 'world'}
@@ -36,7 +41,7 @@ class B(Component):
 
 # Route definition.
 route = Include('/users', [
-    Route('/<id>', create_user, handler=JSONAPIHandler, components=[B])],
+    Route('/<id>', create_user, handler=MyHandler, components=[B])],
     components=[A])
 
 
