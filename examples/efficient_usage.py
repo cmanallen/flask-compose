@@ -4,14 +4,31 @@ To run this module please install flask and flask_router.
     `$ pip install flask`
     `$ pip install .`
 """
-from flask import g
-from flask_router import Component, Handler
+from flask import Flask
+from flask_router import Component, Handler, Include, Route, Router
+
+import functools
+
+
+# Typical data types in most projects.
+
+
+class UserModel:
+    query = [1, 2, 3]
+
+
+class UserSerializer:
+
+    def __init__(self, *args, **kwargs): pass
+
+    def dump(self, models):
+        return [str(model) for model in models]
 
 
 # Your concrete "handler" class.
 #
-# This class should define all of the behavior you wish to decorator
-# within your controller. When in doubt decorate!
+# This class should define all of the behavior you wish to decorate
+# within your controller.
 
 
 class PlatformHandler(Handler):
@@ -22,8 +39,7 @@ class PlatformHandler(Handler):
         return serializer.dump(models)
 
     def query_response(self, query, serializer) -> dict:
-        models = query.all()
-        return serializer.dump(models)
+        return self.model_response(query, serializer)
 
     def resolve_model(self):
         raise NotImplementedError
@@ -44,7 +60,7 @@ class PlatformHandler(Handler):
         return {}
 
 
-# Your decorator (named "component" for clarity) class.
+# Your decorator class (named "component" for clarity).
 #
 # It is not necessary to define a base decorator class. The "Component"
 # class will automatically implement all of the behaviors of the
@@ -69,10 +85,12 @@ class UserComponent(Component):
 
     def resolve_query(self, model):
         query = self.parent.resolve_query(model)
-        return query.filter(model.is_active.is_(True))
+        # If it were real.
+        # return query.filter(model.is_active.is_(True))
+        return query
 
     def resolve_serializer(self):
-        return UserSchema
+        return UserSerializer
 
     def resolve_serializer_options(self):
         result = self.parent.resolve_serializer_options()
@@ -112,9 +130,16 @@ class PatchComponent(Component):
         return result
 
 
-# /controllers.py
+# "/controllers.py"
 def browse(handler, **uri_args):
-    pass
+    model_cls = handler.resolve_model()
+    query = handler.resolve_query(model_cls)
+
+    serializer_cls = handler.resolve_serializer()
+    serializer = serializer_cls(handler.resolve_serializer_options())
+
+    response = handler.query_response(query, serializer)
+    return str(response), 200
 
 
 def get(handler, **uri_args):
@@ -133,12 +158,36 @@ def delete(handler, **uri_args):
     pass
 
 
-# /routes.py
+# "/routes.py"
+
+# Define a generic application route. The handler should be generalized.
+MyRoute = functools.partial(Route, handler=PlatformHandler)
+
+# Define generic request method routes.  The controllers should be
+# generalized and not require frequent changes.
+MyBrowseRoute = functools.partial(MyRoute, controller=browse, method='GET')
+MyGetRoute = functools.partial(MyRoute, controller=get, method='GET')
+MyCreateRoute = functools.partial(MyRoute, controller=create, method='POST')
+MyUpdateRoute = functools.partial(MyRoute, controller=update, method='PATCH')
+MyDeleteRoute = functools.partial(MyRoute, controller=delete, method='DELETE')
+
+
+# Create your route structure. If you choose to name the parent
+# structure be sure to name the routes themselves!
 routes = []
+routes.append(
+    Include('/users', components=[UserComponent], routes=[
+        MyBrowseRoute(''), MyCreateRoute(''), MyGetRoute('/<id>'),
+        MyUpdateRoute('/<id>'), MyDeleteRoute('/<id>')]
+    )
+)
 
 
-# /factory.py
+# "/factory.py"
 app = Flask(__name__)
 
 api = Router(app)
 api.add_routes(routes)
+
+with app.app_context():
+    print(app.test_client().get('/users').data.decode('utf-8'))
