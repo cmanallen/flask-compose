@@ -45,7 +45,7 @@ def dispatch_request(**uri_args):
 
 #### Why
 
-REST resources have well known behaviors that rarely deviate on a per resource basis.  Knowing this, resources should lend themselves to reuse.  However, as often happens in glue code, there is just enough variability between resources that reuse is either impossible or impractical.  The "decorator design pattern" was concieved as an attempt to address this problem.  This library encourages its use through its routing system.
+REST resources have well known behaviors that rarely deviate on a per resource basis.  Knowing this, resources should lend themselves to reuse.  However, as often happens in glue code, there is just enough variability between resources that reuse is either impossible or impractical.  The "decorator design pattern" was concieved as an attempt to address this type of problem.  This library encourages its use through its routing system.
 
 #### Philosophy
 
