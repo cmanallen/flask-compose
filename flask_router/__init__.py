@@ -125,7 +125,9 @@ class Router:
             path = '{}{}'.format(prefix, route.path)
 
             # Construct a name for the route or default to the path.
-            name = '{}{}'.format(namespace, route.name) or path
+            name = '{}{}'.format(namespace, route.name)
+            if not name:
+                name = path + route.method
 
             # Concatenate components with the concrete class in last
             # place.
