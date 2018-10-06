@@ -130,6 +130,33 @@ class PatchComponent(Component):
         return result
 
 
+# "/middleware.py"
+#
+# Middleware works on a request level whereas your components operate
+# on behavioral level. Middleware wraps a request and provides pre and
+# post request hooks.
+
+
+def authorize(fn):
+    @functools.wraps(fn)
+    def decorator(*args, **kwargs):
+        print('User has been authorized.')
+        return fn(*args, **kwargs)
+    return decorator
+
+
+def can_access_user(fn):
+    @functools.wraps(fn)
+    def decorator(*args, **kwargs):
+        if kwargs['id'] == '1':
+            print('I\'ll allow it.')
+            return fn(*args, **kwargs)
+        else:
+            print('Insufficient privileges.')
+            return '', 400
+    return decorator
+
+
 # "/controllers.py"
 def browse(handler, **uri_args):
     model_cls = handler.resolve_model()
@@ -143,19 +170,19 @@ def browse(handler, **uri_args):
 
 
 def get(handler, **uri_args):
-    pass
+    return browse(handler, **uri_args)
 
 
 def create(handler, **uri_args):
-    pass
+    return browse(handler, **uri_args)
 
 
 def update(handler, **uri_args):
-    pass
+    return browse(handler, **uri_args)
 
 
 def delete(handler, **uri_args):
-    pass
+    return browse(handler, **uri_args)
 
 
 # "/routes.py"
@@ -176,9 +203,11 @@ MyDeleteRoute = functools.partial(MyRoute, controller=delete, method='DELETE')
 # structure be sure to name the routes themselves!
 routes = []
 routes.append(
-    Include('/users', components=[UserComponent], routes=[
-        MyBrowseRoute(''), MyCreateRoute(''), MyGetRoute('/<id>'),
-        MyUpdateRoute('/<id>'), MyDeleteRoute('/<id>')]
+    Include(
+        '/users', components=[UserComponent], middleware=[authorize], routes=[
+            MyBrowseRoute(''), MyCreateRoute(''),
+            MyGetRoute('/<id>', middleware=[can_access_user]),
+            MyUpdateRoute('/<id>'), MyDeleteRoute('/<id>')]
     )
 )
 
@@ -191,3 +220,7 @@ api.add_routes(routes)
 
 with app.app_context():
     print(app.test_client().get('/users').data.decode('utf-8'))
+    print('\n')
+    print(app.test_client().get('/users/1').data.decode('utf-8'))
+    print('\n')
+    print(app.test_client().get('/users/2').data.decode('utf-8'))
