@@ -153,7 +153,7 @@ def can_access_user(fn):
             return fn(*args, **kwargs)
         else:
             print('Insufficient privileges.')
-            return '', 400
+            return '', 401
     return decorator
 
 
