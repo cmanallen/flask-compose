@@ -53,8 +53,7 @@ def dispatch_request(fn: Callable, decorators: List[Parent], **uri_args: str):
 
     # Initialize each of the remaining decorators being sure to
     # populate their __init__ with the previously initialized class.
-    while decorators:
-        decorator = decorators.pop()
+    for decorator in reversed(decorators):
         handler = decorator(handler)
 
     # Pass the handler instance into our controller function and return
@@ -119,8 +118,7 @@ class Route:
         # Wrap the view with middleware. The first middleware in the
         # list is the last middleware applied.
         middleware = middleware + self.middleware
-        while middleware:
-            wrap = middleware.pop()
+        for wrap in reversed(middleware):
             view = wrap(view)
 
         return Rule(path, name, view, [self.method])
