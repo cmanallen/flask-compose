@@ -46,15 +46,16 @@ class Handler:
 
 
 def dispatch_request(fn: Callable, decorators: List[Parent], **uri_args: str):
-    # Initialize the concrete class.  The concrete class will always
-    # exist at the end of the list.
-    handler = decorators.pop()
-    handler = handler()
+    # Set a default handler value.
+    handler = None
 
-    # Initialize each of the remaining decorators being sure to
-    # populate their __init__ with the previously initialized class.
+    # Initialize each of the classes being sure to populate their
+    # __init__ with the previously initialized class.
     for decorator in reversed(decorators):
-        handler = decorator(handler)
+        if handler is None:
+            handler = decorator()
+        else:
+            handler = decorator(handler)
 
     # Pass the handler instance into our controller function and return
     # its result.
@@ -71,7 +72,9 @@ class Route:
             method: str = 'GET',
             name: str = '',
             middleware: Middlewares = None,
-            components: Components = None) -> None:
+            components: Components = None,
+            ignored_middleware: Middlewares = None,
+            ignored_components: Components = None) -> None:
         self.path = path
         self.controller = controller
         self.handler = handler
@@ -79,6 +82,8 @@ class Route:
         self.name = name
         self.middleware = middleware or []
         self.components = components or []
+        self.ignored_middleware = ignored_middleware or []
+        self.ignored_components = ignored_components or []
 
     def make_url_rule(self, includes: List['Include']) -> Rule:
         """Return a "Rule" instance."""
@@ -102,6 +107,9 @@ class Route:
         # Concatenate components with the concrete class in last
         # place.
         components = components + self.components + [self.handler]
+        components = [
+            component for component in components
+            if component not in self.ignored_components]
 
         # Construct the URI path.
         path = '{}{}'.format(path, self.path)
@@ -119,7 +127,8 @@ class Route:
         # list is the last middleware applied.
         middleware = middleware + self.middleware
         for wrap in reversed(middleware):
-            view = wrap(view)
+            if wrap not in self.ignored_middleware:
+                view = wrap(view)
 
         return Rule(path, name, view, [self.method])
 
@@ -132,12 +141,16 @@ class Include:
             routes: Routes,
             name: str = '',
             middleware: Middlewares = None,
-            components: Components = None) -> None:
+            components: Components = None,
+            ignored_middleware: Middlewares = None,
+            ignored_components: Components = None) -> None:
         self.path = path
         self.routes = routes
         self.name = name
         self.middleware = middleware or []
         self.components = components or []
+        self.ignored_middleware = ignored_middleware or []
+        self.ignored_components = ignored_components or []
 
 
 class Router:
