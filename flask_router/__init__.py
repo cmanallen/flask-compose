@@ -107,10 +107,12 @@ class Route(RouteLike):
         # Concatenate components with the concrete class in last
         # place. Remove ignored items.
         components = components + self.components
+        ignored_components = ignored_components + self.ignored_components
         components = [c for c in components if c not in ignored_components]
 
         # Concatenate middleware and remove ingnored items.
         middleware = middleware + self.middleware
+        ignored_middleware = ignored_middleware + self.ignored_middleware
         middleware = [m for m in middleware if m not in ignored_middleware]
 
         # Set handler value.
