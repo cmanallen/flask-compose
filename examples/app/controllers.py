@@ -7,6 +7,7 @@ import json
 
 
 def render_response(fn):
+    """Response renderer middleware."""
     def decorator(*args, **kwargs):
         data, code = fn(*args, **kwargs)
         return make_response(jsonify(data), code)

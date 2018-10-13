@@ -25,13 +25,19 @@ from controllers import render_response
 
 
 # User Routes
-user = Include('', routes=[
-    BrowseRoute(), GetRoute(), CreateRoute(), UpdateRoute(
-        components=[UserUpdateComponent],
-        ignored_components=[ActiveUserComponent]),
-    DeleteRoute()], components=[UserComponent])
+user_browse = BrowseRoute()
+user_get = GetRoute()
+user_create = CreateRoute()
+user_update = UpdateRoute(
+    components=[UserUpdateComponent], ignored_components=[ActiveUserComponent])
+user_delete = DeleteRoute()
 
-# User Child Routes
+# User group.
+user = Include('', routes=[
+    user_browse, user_get, user_create, user_update, user_delete],
+    components=[UserComponent])
+
+# User children group.
 user_email = Include('/emails', routes=[
     BrowseRoute(), GetRoute(), CreateRoute(), UpdateRoute(), DeleteRoute()],
     components=[UserEmailComponent])
