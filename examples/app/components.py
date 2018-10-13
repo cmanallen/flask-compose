@@ -1,6 +1,6 @@
 from flask_router import Component
-from models import UserModel, UserEmailModel
-from schemas import UserSchema, UserEmailSchema
+from models import UserModel, UserEmailModel, UserPhoneModel
+from schemas import UserSchema, UserEmailSchema, UserPhoneSchema
 
 
 class ActiveUserComponent(Component):
@@ -32,17 +32,34 @@ class UserComponent(TypeComponent):
     model = UserModel
     schema = UserSchema
 
-    @property
-    def schema_dump_options(self):
-        options = self.parent.schema_dump_options
-        options['only'] = ('id',)
-        return options
+    def schema_dump_options(self, **schema_options):
+        schema_options['only'] = ('id',)
+        return self.parent.schema_dump_options(**schema_options)
 
 
-class UserEmailComponent(TypeComponent):
-    model = UserEmailModel
-    schema = UserEmailSchema
+class UserUpdateComponent(Component):
+
+    def schema_dump_options(self, **schema_options):
+        schema_options['only'] = ('id', 'is_active')
+        return self.parent.schema_dump_options(**schema_options)
+
+    def schema_load_options(self, **schema_options):
+        schema_options['only'] = ('id', 'is_active')
+        return self.parent.schema_load_options(**schema_options)
+
+
+class UserChildMixin:
 
     @property
     def query(self):
         return self.model.query.join(UserModel)
+
+
+class UserEmailComponent(UserChildMixin, TypeComponent):
+    model = UserEmailModel
+    schema = UserEmailSchema
+
+
+class UserPhoneComponent(UserChildMixin, TypeComponent):
+    model = UserPhoneModel
+    schema = UserPhoneSchema

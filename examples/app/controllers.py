@@ -23,13 +23,13 @@ class PlatformHandler(Handler):
     def schema(self):
         raise NotImplementedError
 
-    @property
-    def schema_dump_options(self):
-        return {}
+    def schema_dump_options(self, **schema_options):
+        """Return schema dump options."""
+        return schema_options
 
-    @property
-    def schema_load_options(self):
-        return {}
+    def schema_load_options(self, **schema_options):
+        """Return schema load options."""
+        return schema_options
 
     def fetch_all(self, query):
         """Return a collection of resources."""
@@ -41,6 +41,9 @@ class PlatformHandler(Handler):
 
     def make_query(self, query, **uri_args):
         return query
+
+    def deserialize(self, schema, data, **load_options):
+        return schema.load(data, **load_options)
 
     def serialize(self, schema, model):
         return schema.dump(model).data
@@ -62,7 +65,7 @@ def browse_type(handler, **uri_args):
     query = handler.make_query(query, **uri_args)
 
     schema = handler.schema
-    schema = schema(**handler.schema_dump_options)
+    schema = schema(**handler.schema_dump_options())
 
     models = handler.fetch_all(query)
     result = handler.serialize_all(schema, models)
@@ -86,19 +89,97 @@ def get_type(handler, **uri_args):
         abort(404)
 
     schema = handler.schema
-    schema = schema(**handler.schema_dump_options)
+    schema = schema(**handler.schema_dump_options())
 
     result = handler.serialize(schema, model)
     return result, 200
 
 
-# def create_type(handler, **uri_args):
-#     return response, 201
+def create_type(handler, **uri_args):
+    """Create and return a resource.
+
+    Steps:
+        1. Deserialize the request data.
+        2. Create a new resource.
+        3. Construct a serializer.
+        4. Return a serailized response.
+    """
+    form = request.data.decode('utf-8')
+    form = json.loads(form)
+
+    schema = handler.schema
+    schema = schema(**handler.schema_load_options())
+    result, errors = handler.deserialize(schema, form)
+    if errors:
+        return errors, 401
+
+    model = handler.model(**result)
+    db.session.add(model)
+    db.session.commit()
+
+    schema = handler.schema
+    schema = schema(**handler.schema_dump_options())
+
+    result = handler.serialize(schema, model)
+    return result, 201
 
 
-# def update_type(handler, **uri_args):
-#     return response, 202
+def update_type(handler, **uri_args):
+    """Update and return a requested resource.
+
+    Steps:
+        1. Construct a query.
+        2. Fetch the requested resource.
+        3. Abort if a resource is not found.
+        4. Deserialize the request data.
+        5. Update the resource.
+        6. Construct a serializer.
+        7. Return a serailized response.
+    """
+    query = handler.query
+    query = handler.make_query(query, **uri_args)
+    model = handler.fetch_one(query)
+    if not model:
+        abort(404)
+
+    form = request.data.decode('utf-8')
+    form = json.loads(form)
+
+    schema = handler.schema
+    schema = schema(**handler.schema_load_options())
+    result, errors = handler.deserialize(schema, form, partial=True)
+    if errors:
+        return errors, 401
+
+    for key, value in result.items():
+        setattr(model, key, value)
+    db.session.add(model)
+    db.session.commit()
+
+    schema = handler.schema
+    schema = schema(**handler.schema_dump_options())
+
+    result = handler.serialize(schema, model)
+    return result, 202
 
 
-# def delete_type(handler, **uri_args):
-#     return response, 204
+def delete_type(handler, **uri_args):
+    """Delete a resource and return an empty content response.
+
+    Steps:
+        1. Construct a query.
+        2. Fetch the requested resource.
+        3. Abort if a resource is not found.
+        4. Delete the resource.
+        5. Return an empty response.
+    """
+    query = handler.query
+    query = handler.make_query(query, **uri_args)
+    model = handler.fetch_one(query)
+    if not model:
+        abort(404)
+
+    db.session.delete(model)
+    db.session.commit()
+
+    return '', 204
