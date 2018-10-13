@@ -1,19 +1,20 @@
-from typing import Any, Callable, List, Optional, Union
+from typing import Any, Callable, Generator, List, Optional, Union, Tuple
 
 import collections
-import flask
+import flask  # type: ignore
 import functools
 
 
 Components = Optional[List['Component']]
 Middleware = Callable[[Callable[..., Any]], Callable[..., Any]]
 Middlewares = Optional[List[Middleware]]
-Parent = Union['Component', 'Handler']
-RouteLike = Union['Route', 'Include']
-Routes = Optional[List[RouteLike]]
+Routes = List['RouteLike']
+IterRoute = Generator[Tuple[List['Include'], 'Route'], None, None]
 
 
-Rule = collections.namedtuple('Rule', ('path', 'name', 'action', 'methods'))
+Rule = collections.namedtuple('Rule', (
+    'path', 'name', 'action', 'methods', 'controller', 'handler', 'components',
+    'middleware'))
 
 
 class Component:
@@ -45,50 +46,46 @@ class Handler:
     pass
 
 
-def dispatch_request(fn: Callable, decorators: List[Parent], **uri_args: str):
-    # Set a default handler value.
-    handler = None
-
-    # Initialize each of the classes being sure to populate their
-    # __init__ with the previously initialized class.
-    for decorator in reversed(decorators):
-        if handler is None:
-            handler = decorator()
-        else:
-            handler = decorator(handler)
-
-    # Pass the handler instance into our controller function and return
-    # its result.
+def dispatch_request(fn: Callable, handler: Handler, components: List[Component], **uri_args: str):
+    handler = handler()  # type: ignore
+    for component in reversed(components):
+        handler = component(handler)
     return fn(handler, **uri_args)
 
 
-class Route:
+class RouteLike:
 
     def __init__(
             self,
-            path: str,
-            controller: Callable,
-            handler: Handler,
-            method: str = 'GET',
             name: str = '',
             middleware: Middlewares = None,
             components: Components = None,
             ignored_middleware: Middlewares = None,
             ignored_components: Components = None) -> None:
-        self.path = path
-        self.controller = controller
-        self.handler = handler
-        self.method = method
         self.name = name
         self.middleware = middleware or []
         self.components = components or []
         self.ignored_middleware = ignored_middleware or []
         self.ignored_components = ignored_components or []
 
+
+class Route(RouteLike):
+
+    def __init__(
+            self, path: str, controller: Callable, handler: Handler,
+            method: str = 'GET', **route_opts) -> None:
+        self.path = path
+        self.controller = controller
+        self.handler = handler
+        self.method = method
+        super().__init__(**route_opts)
+
     def make_url_rule(self, includes: List['Include']) -> Rule:
         """Return a "Rule" instance."""
         components: List[Any] = []
         middleware: List[Middleware] = []
+        ignored_components: List[Any] = []
+        ignored_middleware: List[Middleware] = []
         name = ''
         path = ''
 
@@ -98,6 +95,9 @@ class Route:
             components = components + include.components
             middleware = middleware + include.middleware
 
+            ignored_components = ignored_components + include.ignored_components
+            ignored_middleware = ignored_middleware + include.ignored_middleware
+
             # Concatenate the names.
             name = '{}{}'.format(name, include.name)
 
@@ -105,11 +105,16 @@ class Route:
             path = '{}{}'.format(path, include.path)
 
         # Concatenate components with the concrete class in last
-        # place.
-        components = components + self.components + [self.handler]
-        components = [
-            component for component in components
-            if component not in self.ignored_components]
+        # place. Remove ignored items.
+        components = components + self.components
+        components = [c for c in components if c not in ignored_components]
+
+        # Concatenate middleware and remove ingnored items.
+        middleware = middleware + self.middleware
+        middleware = [m for m in middleware if m not in ignored_middleware]
+
+        # Set handler value.
+        handler = self.handler
 
         # Construct the URI path.
         path = '{}{}'.format(path, self.path)
@@ -121,36 +126,36 @@ class Route:
 
         # Construct a function with the components pre-specified.
         view = dispatch_request
-        view = functools.partial(view, fn=self.controller, decorators=components)
+        view = functools.partial(
+            view, fn=self.controller, handler=handler, components=components)
 
         # Wrap the view with middleware. The first middleware in the
         # list is the last middleware applied.
-        middleware = middleware + self.middleware
-        for wrap in reversed(middleware):
-            if wrap not in self.ignored_middleware:
-                view = wrap(view)
+        for middleware_ in reversed(middleware):
+            view = middleware_(view)
 
-        return Rule(path, name, view, [self.method])
+        return Rule(
+            path=path, name=name, action=view, methods=[self.method],
+            controller=self.controller, handler=handler,
+            components=components, middleware=middleware)
 
 
-class Include:
+class Include(RouteLike):
 
-    def __init__(
-            self,
-            path: str,
-            routes: Routes,
-            name: str = '',
-            middleware: Middlewares = None,
-            components: Components = None,
-            ignored_middleware: Middlewares = None,
-            ignored_components: Components = None) -> None:
+    def __init__(self, path: str, routes: Routes, **route_opts) -> None:
         self.path = path
         self.routes = routes
-        self.name = name
-        self.middleware = middleware or []
-        self.components = components or []
-        self.ignored_middleware = ignored_middleware or []
-        self.ignored_components = ignored_components or []
+        super().__init__(**route_opts)
+
+    def __iter__(self) -> IterRoute:
+        yield from self.iter_route_set([self])
+
+    def iter_route_set(self, path: List['Include']) -> IterRoute:
+        for route in self.routes:
+            if isinstance(route, Route):
+                yield path, route
+            elif isinstance(route, Include):
+                yield from route.iter_route_set(path + [route])
 
 
 class Router:
@@ -158,23 +163,20 @@ class Router:
     def __init__(self, app: flask.Flask) -> None:
         self.app = app
 
-    def add_routes(
-            self, routes: Routes,
-            includes: Optional[List[Include]] = None) -> None:
+    def add_routes(self, routes: Routes) -> None:
         """For each route add a URL rule to the application."""
-        includes = includes or []
         for route in routes:
-            self.add_route(route, includes)
+            if isinstance(route, Include):
+                for includes, r in route:
+                    self.add_route(includes, r)
+            elif isinstance(route, Route):
+                self.add_route([], route)
 
-    def add_route(self, route: RouteLike, includes: List[Include]) -> None:
+    def add_route(self, includes: List[Include], route: Route) -> None:
         """Add a URL rule to the application."""
-        if isinstance(route, Include):
-            # Append the include and recurse deeper into the tree.
-            self.add_routes(route.routes, includes + [route])
-        elif isinstance(route, Route):
-            # Create a URL Rule instance.
-            rule = route.make_url_rule(includes)
+        # Create a URL Rule instance.
+        rule = route.make_url_rule(includes)
 
-            # Add the URL rule to the application.
-            self.app.add_url_rule(
-                rule.path, rule.name, rule.action, methods=rule.methods)
+        # Add the URL rule to the application.
+        self.app.add_url_rule(
+            rule.path, rule.name, rule.action, methods=rule.methods)
