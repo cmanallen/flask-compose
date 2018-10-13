@@ -1,0 +1,17 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+flask = "*"
+sqlalchemy = "*"
+marshmallow = "*"
+flask-router = {editable = true, path = "."}
+flask-sqlalchemy = "*"
+
+[dev-packages]
+flask = "*"
+
+[requires]
+python_version = "3.6"
