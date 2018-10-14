@@ -46,7 +46,9 @@ class Handler:
     pass
 
 
-def dispatch_request(fn: Callable, handler: Handler, components: List[Component], **uri_args: str):
+def dispatch_request(
+        fn: Callable, handler: Handler, components: List[Component],
+        **uri_args: str):
     handler = handler()  # type: ignore
     for component in reversed(components):
         handler = component(handler)
@@ -106,13 +108,13 @@ class Route(RouteLike):
 
         # Concatenate components with the concrete class in last
         # place. Remove ignored items.
-        components = components + self.components
         ignored_components = ignored_components + self.ignored_components
+        components = components + self.components
         components = [c for c in components if c not in ignored_components]
 
         # Concatenate middleware and remove ingnored items.
-        middleware = middleware + self.middleware
         ignored_middleware = ignored_middleware + self.ignored_middleware
+        middleware = middleware + self.middleware
         middleware = [m for m in middleware if m not in ignored_middleware]
 
         # Set handler value.
@@ -165,14 +167,14 @@ class Router:
     def __init__(self, app: flask.Flask) -> None:
         self.app = app
 
-    def add_routes(self, routes: Routes) -> None:
-        """For each route add a URL rule to the application."""
-        for route in routes:
-            if isinstance(route, Include):
-                for includes, r in route:
-                    self.add_route(includes, r)
-            elif isinstance(route, Route):
-                self.add_route([], route)
+    def add_routes(self, items: Routes) -> None:
+        """For each item add a URL rule to the application."""
+        for item in items:
+            if isinstance(item, Include):
+                for includes, route in item:
+                    self.add_route(includes, route)
+            elif isinstance(item, Route):
+                self.add_route([], item)
 
     def add_route(self, includes: List[Include], route: Route) -> None:
         """Add a URL rule to the application."""
