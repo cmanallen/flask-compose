@@ -164,8 +164,25 @@ class Include(RouteLike):
 
 class Router:
 
+    __rules = {}
+
     def __init__(self, app: flask.Flask) -> None:
         self.app = app
+
+    def __iter__(self):
+        yield from self.__rules
+
+    def __getitem__(self, key: str) -> Rule:
+        return self.__rules[key]
+
+    def __setitem__(self, key: str, value: Rule) -> None:
+        self.__rules[key] = value
+
+    def __contains__(self, key: str) -> bool:
+        return key in self.__rules
+
+    def __len__(self) -> int:
+        return len(self.__rules)
 
     def add_routes(self, items: Routes) -> None:
         """For each item add a URL rule to the application."""
@@ -177,10 +194,15 @@ class Router:
                 self.add_route([], item)
 
     def add_route(self, includes: List[Include], route: Route) -> None:
-        """Add a URL rule to the application."""
-        # Create a URL Rule instance.
-        rule = route.make_url_rule(includes)
+        """Create and add a URL rule to the application."""
+        self.add_rule(route.make_url_rule(includes))
 
-        # Add the URL rule to the application.
+    def add_rule(self, rule):
+        """Add a URL rule to the application."""
+        self[rule.name] = rule
         self.app.add_url_rule(
             rule.path, rule.name, rule.action, methods=rule.methods)
+
+    def items(self) -> Tuple[str, Rule]:
+        """Generate a tuple of key, value pairs."""
+        yield from self.__rules.items()

@@ -4,14 +4,14 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-flask = "*"
-sqlalchemy = "*"
-marshmallow = "*"
-flask-router = {editable = true, path = "."}
-flask-sqlalchemy = "*"
 
 [dev-packages]
+nose = "*"
 flask = "*"
+flask-sqlalchemy = "*"
+marshmallow = "*"
+sqlalchemy = "*"
+flask-router = {editable = true, path = "."}
 
 [requires]
 python_version = "3.6"
