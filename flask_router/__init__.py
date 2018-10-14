@@ -155,6 +155,7 @@ class Include(RouteLike):
         yield from self.iter_route_set([self])
 
     def iter_route_set(self, path: List['Include']) -> IterRoute:
+        """Generate a tuple of ["Include"], "Route" pairs."""
         for route in self.routes:
             if isinstance(route, Route):
                 yield path, route
@@ -173,9 +174,6 @@ class Router:
 
     def __getitem__(self, key: str) -> Rule:
         return self.rules[key]
-
-    def __setitem__(self, key: str, value: Rule) -> None:
-        self.rules[key] = value
 
     def __contains__(self, key: str) -> bool:
         return key in self.rules
@@ -198,7 +196,7 @@ class Router:
 
     def add_rule(self, rule: Rule) -> None:
         """Add a URL rule to the application."""
-        self[rule.name] = rule
+        self.rules[rule.name] = rule
         self.app.add_url_rule(
             rule.path, rule.name, rule.action, methods=rule.methods)
 
