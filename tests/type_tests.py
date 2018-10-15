@@ -9,9 +9,29 @@ class Handler:
     def test(self):
         return ''
 
+    def leak(self):
+        return None
 
-class A(Component): type = 'A'
-class B(Component): type = 'B'
+
+class A(Component):
+    type = 'A'
+
+    def leak(self):
+        self.am_i_leaking = False
+        self.parent.leak()
+
+    def check_val(self):
+        return self.am_i_leaking == False
+
+
+class B(Component):
+    type = 'B'
+
+    def leak(self):
+        self.parent.leak()
+        if hasattr(self, 'am_i_leaking'):
+            raise Exception('I leaked.')
+
 
 
 class TypeTestCase(TestCase):
@@ -22,6 +42,15 @@ class TypeTestCase(TestCase):
         self.assertTrue(handler.test() == '')
         self.assertTrue(hasattr(Component, 'test') is False)
         self.assertTrue(hasattr(handler, 'test'))
+
+    def test_component_leaking(self):
+        """Assert "Component" instance does not leak into other classes."""
+        handler = A(B(Handler()))
+        handler.leak()
+
+        self.assertTrue(hasattr(handler, 'am_i_leaking'))
+        self.assertTrue(not hasattr(handler.parent, 'am_i_leaking'))
+        self.assertTrue(handler.check_val())
 
     def test_dispatch_request(self):
         """Test "dispatch_request" function."""
