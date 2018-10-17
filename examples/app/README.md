@@ -1,20 +1,20 @@
-### Sample Implementation
+## Sample Implementation
 
 To demonstrate the powerful, labor-saving efficiencies of the "Decorator Design Pattern" and the "flask-router" library a simple Flask application has been created.
 
-##### Installation
+#### Installation
 
 ```bash
 $ pip install -r requirements.txt
 ```
 
-##### Run Server
+#### Run Server
 
 ```bash
 $ python examples/app/__init__.py
 ```
 
-##### Code Review
+#### Code Review
 
 Those aspects of this application unrelated to "flask-router" were put together with little care. A selection of files which should be considered when introducing yourself to the library have been listed below:
 
