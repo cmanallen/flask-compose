@@ -1,17 +1,10 @@
-from flask import abort, jsonify, make_response, request
-from flask_router import Handler
+from flask import abort, request
+from flask_router import Handler, Route
 
 from common import db
 
+import functools
 import json
-
-
-def render_response(fn):
-    """Response renderer middleware."""
-    def decorator(*args, **kwargs):
-        data, code = fn(*args, **kwargs)
-        return make_response(jsonify(data), code)
-    return decorator
 
 
 class PlatformHandler(Handler):
@@ -184,3 +177,16 @@ def delete_type(handler, **uri_args):
     db.session.commit()
 
     return '', 204
+
+
+# Helper routes.
+#
+# Optionally, you can define some routes which will implement our
+# generic controllers and handler automatically. This is useful for
+# preventing carpal tunnel...
+Route = functools.partial(Route, handler=PlatformHandler)
+BrowseRoute = functools.partial(Route, controller=browse_type, method='GET', path='')
+CreateRoute = functools.partial(Route, controller=create_type, method='POST', path='')
+GetRoute = functools.partial(Route, controller=get_type, method='GET', path='/<id>')
+UpdateRoute = functools.partial(Route, controller=update_type, method='PATCH', path='/<id>')
+DeleteRoute = functools.partial(Route, controller=delete_type, method='DELETE', path='/<id>')

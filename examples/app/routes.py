@@ -1,56 +1,52 @@
-# Construct some generic route types with default arguments.
-from flask_router import Route
-from functools import partial
-
-from controllers import (
-    PlatformHandler, browse_type, get_type, create_type, update_type,
-    delete_type)
-
-
-Route = partial(Route, handler=PlatformHandler)
-BrowseRoute = partial(Route, controller=browse_type, method='GET', path='')
-CreateRoute = partial(Route, controller=create_type, method='POST', path='')
-GetRoute = partial(Route, controller=get_type, method='GET', path='/<id>')
-UpdateRoute = partial(Route, controller=update_type, method='PATCH', path='/<id>')
-DeleteRoute = partial(Route, controller=delete_type, method='DELETE', path='/<id>')
-
-
-# Construct the applications routes.
-from flask_router import Include
-
 from components import (
     ActiveUserComponent, UserComponent, UserEmailComponent, UserPhoneComponent,
     UserUpdateComponent)
-from controllers import render_response
+from controllers import (
+    BrowseRoute, CreateRoute, GetRoute, UpdateRoute, DeleteRoute)
+from flask_router import Include
+from middleware import render_response
 
 
-# User Routes
-user_browse = BrowseRoute()
-user_get = GetRoute()
-user_create = CreateRoute()
+# User routes.
+#
+# You can define your routes separately and then throw them into a
+# shared group.
 user_update = UpdateRoute(
     components=[UserUpdateComponent], ignored_components=[ActiveUserComponent])
-user_delete = DeleteRoute()
-
-# User group.
 user = Include('', routes=[
-    user_browse, user_get, user_create, user_update, user_delete],
+    BrowseRoute(), GetRoute(), CreateRoute(), user_update, DeleteRoute()],
     components=[UserComponent])
 
-# User children group.
+
+# User children routes.
+#
+# You can also define the routes inline. Functionally, there is no
+# difference. What matters is developer productivity.
+#
+# The "user_child" include helps us define a common route structure.
+# The above endpoints will now expect a "user_id" to be provided to
+# their view functions.
 user_email = Include('/emails', routes=[
     BrowseRoute(), GetRoute(), CreateRoute(), UpdateRoute(), DeleteRoute()],
     components=[UserEmailComponent])
 user_phone = Include('/phones', routes=[
     BrowseRoute(), GetRoute(), CreateRoute(), UpdateRoute(), DeleteRoute()],
     components=[UserPhoneComponent])
+user_child = Include('/<user_id>', routes=[user_email, user_phone])
 
-# Group user children.
-user_subtypes = Include('/<user_id>', routes=[user_email, user_phone])
 
-# Group user types.
-user_types = Include('/users', routes=[user, user_subtypes], components=[ActiveUserComponent])
+# General "/users" path routes.
+#
+# We combine our children and our subtypes into a single route. Thanks
+# to our component composition scheme, all of our routes on the
+# "/users" path will require the user to be active.
+user_types = Include(
+    '/users', routes=[user, user_child], components=[ActiveUserComponent])
 
-# Construct a combined route with a middleware.
+
+# Application routes.
+#
+# Finally, we reach the final level of our routing scheme. Here we
+# specify some highly generalized components and middleware.
 routes = []
 routes.append(Include('', routes=[user_types], middleware=[render_response]))
