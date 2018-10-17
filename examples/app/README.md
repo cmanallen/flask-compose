@@ -1,19 +1,25 @@
-### Sample Flask Application
+### Sample Implementation
 
-#### How to read this module.
+To demonstrate the powerful, labor-saving efficiencies of the "Decorator Design Pattern" and the "flask-router" library a simple Flask application has been created.
 
-This project, from an application standpoint, was put together very quickly.  This module is not meant to teach you how to structure a Flask application.  Rather, it exists to show off the capabilities of the router.
+##### Installation
 
-There are three modules which have some educational value.  Those have been listed below.
+```bash
+$ pip install -r requirements.txt
+```
 
-##### components.py
+##### Run Server
 
-`components.py` demonstrates the structure of a component.  It's purpose is to demonstate when to subclass, when to mixin, and how to decouple behavior.
+```bash
+$ python examples/app/__init__.py
+```
 
-##### controllers.py
+##### Code Review
 
-`controllers.py` illustrates how to construct the core of your application.  Application logic can live within the controller or it can be accessed through the handler.
+Those aspects of this application unrelated to "flask-router" were put together with little care. A selection of files which should be considered when introducing yourself to the library have been listed below:
 
-##### routes.py
+1. components.py
+2. controllers.py
+3. routes.py
 
-`routes.py` demonstrates various techniques for registering routes.  This module shows how behavior can be *composed* and how onerous configuration can be abstracted away.
+The remaining files can be studied to understand the context in which the above files operate. But ultimately, those files are outside the scope of this application and were paid little mind.
