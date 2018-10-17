@@ -1,8 +1,17 @@
-### Flask Router
+## Flask Router
 
 A simple router that promotes component driven endpoint design.
 
 #### Installation
+
+With pipenv:
+
+```bash
+$ cd flask_router
+$ pipenv install
+```
+
+With pip:
 
 ```bash
 $ cd flask_router
