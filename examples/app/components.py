@@ -76,6 +76,9 @@ class UserPhoneComponent(UserChildMixin, TypeComponent):
 class JSONAPIComponent(Component):
     """JSONAPI 1.0 Specification component.
 
+    Used is lieu of `marshmallow-jsonapi`. Allows a single `marshmallow`
+    schema to handle multiple specifications.
+
     Documentation: https://jsonapi.org/
     """
 
