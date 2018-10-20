@@ -87,6 +87,37 @@ class JSONAPIComponent(Component):
 
     def deserialize(self, schema, request, **load_options):
         """Return flatened request set."""
+        def structure_errors(errors):
+            formatted_errors = []
+            for field_name, field_errors in errors.items():
+                for field_error in field_errors:
+                    formatted_errors.append(
+                        structure_error(field_name, field_error))
+            return {'errors': formatted_errors}
+
+        def structure_error(field_name, message, index=None):
+            pointers = ['/data']
+
+            if index is not None:
+                pointers.append(str(index))
+
+            is_relationship = False  # getattr(schema, field_name) or something
+            if is_relationship:
+                pointers.append('relationships')
+            elif field_name != 'id':
+                pointers.append('attributes')
+
+            pointers.append(field_name)
+            # pointers.append(schema._inflect(field_name))
+
+            if is_relationship:
+                pointers.append('data')
+
+            return {
+                'detail': message,
+                'source': {'pointer': '/'.join(pointers)}
+            }
+
         data = {}
         if 'data' not in request:
             raise KeyError('Missing `data` container.')
@@ -103,7 +134,11 @@ class JSONAPIComponent(Component):
             data[key] = value
         for key, value in request['data'].get('relationships', {}).items():
             data[key] = value.get('data')
-        return self.parent.deserialize(schema, data, **load_options)
+
+        result, errors = self.parent.deserialize(schema, data, **load_options)
+        if errors:
+            errors = structure_errors(errors)
+        return result, errors
 
     def serialize(self, schema, model, **dump_options):
         """Return a formatted response."""

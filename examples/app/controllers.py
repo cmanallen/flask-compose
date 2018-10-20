@@ -42,12 +42,6 @@ class PlatformHandler(Handler):
     def serialize(self, schema, model, **dump_options):
         return schema.dump(model, **dump_options).data
 
-    def unwrap_request(self, request, **wrapper_options):
-        return request
-
-    def wrap_response(self, response, **wrapper_options):
-        return response
-
 
 def browse_type(handler, **uri_args):
     """Return a collection endpoint response.
