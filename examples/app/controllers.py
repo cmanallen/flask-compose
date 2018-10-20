@@ -36,14 +36,17 @@ class PlatformHandler(Handler):
     def make_query(self, query, **uri_args):
         return query
 
-    def deserialize(self, schema, data, **load_options):
-        return schema.load(data, **load_options)
+    def deserialize(self, schema, request, **load_options):
+        return schema.load(request, **load_options)
 
-    def serialize(self, schema, model):
-        return schema.dump(model).data
+    def serialize(self, schema, model, **dump_options):
+        return schema.dump(model, **dump_options).data
 
-    def serialize_all(self, schema, models):
-        return [self.serialize(schema, model) for model in models]
+    def unwrap_request(self, request, **wrapper_options):
+        return request
+
+    def wrap_response(self, response, **wrapper_options):
+        return response
 
 
 def browse_type(handler, **uri_args):
@@ -62,7 +65,7 @@ def browse_type(handler, **uri_args):
     schema = schema(**handler.schema_dump_options())
 
     models = handler.fetch_all(query)
-    result = handler.serialize_all(schema, models)
+    result = handler.serialize(schema, models, many=True)
     return result, 200
 
 

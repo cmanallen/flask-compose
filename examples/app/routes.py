@@ -1,6 +1,6 @@
 from components import (
     ActiveUserComponent, UserComponent, UserEmailComponent, UserPhoneComponent,
-    UserUpdateComponent)
+    UserUpdateComponent, JSONAPIComponent)
 from controllers import (
     BrowseRoute, CreateRoute, GetRoute, UpdateRoute, DeleteRoute)
 from flask_router import Include
@@ -49,4 +49,6 @@ user_types = Include(
 # Finally, we reach the final level of our routing scheme. Here we
 # specify some highly generalized components and middleware.
 routes = []
-routes.append(Include('', routes=[user_types], middleware=[render_response]))
+routes.append(Include(
+    '', routes=[user_types], components=[JSONAPIComponent],
+    middleware=[render_response]))

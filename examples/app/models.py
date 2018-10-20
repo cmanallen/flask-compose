@@ -5,7 +5,8 @@ class UserModel(db.Model):
     __tablename__ = 'user'
 
     id = db.Column(db.Integer, primary_key=True)
-    is_active = db.Column(db.Boolean, default=False, nullable=False)
+    username = db.Column(db.String(128))
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
 
 
 class UserEmailModel(db.Model):

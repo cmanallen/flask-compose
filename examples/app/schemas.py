@@ -3,6 +3,7 @@ import marshmallow as ma
 
 class UserSchema(ma.Schema):
     id = ma.fields.Integer()
+    username = ma.fields.String()
     is_active = ma.fields.Boolean()
 
 
