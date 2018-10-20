@@ -89,11 +89,16 @@ class JSONAPIComponent(Component):
         """Return flatened request set."""
         data = {}
         if 'data' not in request:
-            raise ValueError('Invalid request data.')
+            raise KeyError('Missing `data` container.')
         if 'id' not in request['data']:
             raise KeyError('Missing `id` field.')
+        if 'type' not in request['data']:
+            raise KeyError('Missing `type` field.')
+        if request['data']['type'] != self.parent.jsonapi_type:
+            raise ValueError('Invalid `type` specified.')
 
         data['id'] = request['data']['id']
+        data['type'] = request['data']['type']
         for key, value in request['data'].get('attributes', {}).items():
             data[key] = value
         for key, value in request['data'].get('relationships', {}).items():
