@@ -32,14 +32,6 @@ class TypeComponent(Component):
             query = query.filter(getattr(self.model, column) == value)
         return query
 
-    def unwrap_request(self, request, **wrapper_options):
-        wrapper_options['jsonapi_type'] = self.jsonapi_type
-        return self.parent.unwrap_request(request, **wrapper_options)
-
-    def wrap_response(self, response, **wrapper_options):
-        wrapper_options['jsonapi_type'] = self.jsonapi_type
-        return self.parent.wrap_response(response, **wrapper_options)
-
 
 class UserComponent(TypeComponent):
     model = UserModel
@@ -51,15 +43,11 @@ class UserComponent(TypeComponent):
         return self.parent.schema_dump_options(**schema_options)
 
     def schema_load_options(self, **schema_options):
-        schema_options['only'] = ('id', 'username')
+        schema_options['only'] = ('id', 'username', 'is_active')
         return self.parent.schema_load_options(**schema_options)
 
 
 class UserUpdateComponent(Component):
-
-    def schema_dump_options(self, **schema_options):
-        schema_options['only'] = ('id', 'username', 'is_active')
-        return self.parent.schema_dump_options(**schema_options)
 
     def schema_load_options(self, **schema_options):
         schema_options['only'] = ('id', 'is_active')
@@ -94,7 +82,7 @@ class JSONAPIComponent(Component):
     def make_query(self, query, **uri_args):
         """Count the number of results."""
         query = self.parent.make_query(query, **uri_args)
-        self.count = query.count()
+        self.count_query = query
         return query
 
     def deserialize(self, schema, request, **load_options):
@@ -127,7 +115,7 @@ class JSONAPIComponent(Component):
 
         if isinstance(response, list):
             response = [structure_contents(item) for item in response]
-            metadata['meta'] = {'total': self.count}
+            metadata['meta'] = {'total': self.count_query.count()}
             metadata['links'] = {'self': request.base_url}
         else:
             response = structure_contents(response)
