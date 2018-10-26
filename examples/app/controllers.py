@@ -1,3 +1,17 @@
+"""Application controller definition.
+
+This module contains the blueprint for all of our application's
+behavior. It's here that we want to define highly generalized business
+logic.
+
+The code defined in this module can be expanded or simplified depending
+on your use case. To add functionality, move behavior that resides in a
+controller into the "Handler" class. To restrict functionality, move
+behavior from the "Handler" class into a controller function.
+
+Restricting access to business logic can be important when you want to
+ensure your team obeys a certain standard.
+"""
 from flask import abort, request
 from flask_router import Handler, Route
 

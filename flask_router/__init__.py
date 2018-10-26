@@ -34,6 +34,9 @@ class Component:
     def __getattr__(self, name: str) -> Any:
         return getattr(self.parent, name)
 
+    def __repr__(self):
+        return '{}({})'.format(self.__class__.__name__, self.parent.__repr__())
+
 
 class Handler:
     """Handler type.
@@ -43,14 +46,15 @@ class Handler:
     subclassing this type.
     """
 
-    pass
+    def __repr__(self):
+        return '{}()'.format(self.__class__.__name__)
 
 
 def dispatch_request(
         fn: Callable, handler: Handler, components: List[Component],
         **uri_args: str):
     handler = handler()  # type: ignore
-    for component in reversed(components):
+    for component in components:
         handler = component(handler)
     return fn(handler, **uri_args)
 
@@ -84,9 +88,9 @@ class Route(RouteLike):
 
     def make_url_rule(self, includes: List['Include']) -> Rule:
         """Return a "Rule" instance."""
-        components: List[Any] = []
+        components: List[Component] = []
         middleware: List[Middleware] = []
-        ignored_components: List[Any] = []
+        ignored_components: List[Component] = []
         ignored_middleware: List[Middleware] = []
         name = ''
         path = ''
@@ -127,6 +131,9 @@ class Route(RouteLike):
         name = '{}{}'.format(name, self.name)
         if not name:
             name = path + self.method
+
+        # Reverse the components.
+        components = list(reversed(components))
 
         # Construct a function with the components pre-specified.
         view = dispatch_request

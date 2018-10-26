@@ -1,16 +1,22 @@
+"""Application routes definition.
+
+Reading this module from bottom-to-top will add clarity to the
+composition of the routes.
+"""
+from flask_router import Include
+
 from components import (
     ActiveUserComponent, UserComponent, UserEmailComponent, UserPhoneComponent,
     UserUpdateComponent, JSONAPIComponent)
 from controllers import (
     BrowseRoute, CreateRoute, GetRoute, UpdateRoute, DeleteRoute)
-from flask_router import Include
 from middleware import render_response
 
 
 # User routes.
 #
-# You can define your routes separately and then throw them into a
-# shared group.
+# Notice that we do not define a "/users" prefix to the URL.  We'll do
+# this later on in our route definition scheme.
 user_update = UpdateRoute(
     components=[UserUpdateComponent], ignored_components=[ActiveUserComponent])
 user = Include('', routes=[
@@ -19,25 +25,25 @@ user = Include('', routes=[
 
 
 # User children routes.
-#
-# You can also define the routes inline. Functionally, there is no
-# difference. What matters is developer productivity.
-#
-# The "user_child" include helps us define a common route structure.
-# The above endpoints will now expect a "user_id" to be provided to
-# their view functions.
 user_email = Include('/emails', routes=[
     BrowseRoute(), GetRoute(), CreateRoute(), UpdateRoute(), DeleteRoute()],
     components=[UserEmailComponent])
 user_phone = Include('/phones', routes=[
     BrowseRoute(), GetRoute(), CreateRoute(), UpdateRoute(), DeleteRoute()],
     components=[UserPhoneComponent])
+
+
+# General "/<user_id>" path routes.
+#
+# The "user_child" include helps us define a common route structure.
+# The above endpoints will now expect a "user_id" to be provided to
+# their view functions.
 user_child = Include('/<user_id>', routes=[user_email, user_phone])
 
 
 # General "/users" path routes.
 #
-# We combine our children and our subtypes into a single route. Thanks
+# We combine our children and our subtypes into a single include. Thanks
 # to our component composition scheme, all of our routes on the
 # "/users" path will require the user to be active.
 user_types = Include(
@@ -46,9 +52,12 @@ user_types = Include(
 
 # Application routes.
 #
-# Finally, we reach the final level of our routing scheme. Here we
-# specify some highly generalized components and middleware.
+# Finally, we reach the lowest level of our routing scheme. Here we
+# specify some highly generalized components and middleware.  For
+# demonstration purposes we'll create an unstructured endpoint and a
+# JSONAPI formatted endpoint.
 routes = []
+routes.append(Include('/v1', routes=[user_types], middleware=[render_response]))
 routes.append(Include(
-    '', routes=[user_types], components=[JSONAPIComponent],
+    '/v2', routes=[user_types], components=[JSONAPIComponent],
     middleware=[render_response]))

@@ -1,3 +1,8 @@
+"""Application components definition.
+
+This module contains our application's composable business logic.  This
+code can be broadly applicable or highly specialized.
+"""
 from flask import request
 from flask_router import Component
 
@@ -8,7 +13,6 @@ import collections
 
 
 class ActiveUserComponent(Component):
-    """Generic component."""
 
     def make_query(self, model, **uri_args):
         """Return a query which fetches only active users."""
@@ -79,6 +83,10 @@ class JSONAPIComponent(Component):
     Used is lieu of `marshmallow-jsonapi`. Allows a single `marshmallow`
     schema to handle multiple specifications.
 
+    Currently, this implementation is only half-baked. We are missing
+    relationship serialization and deserailization, query handling, and
+    compound documents.
+
     Documentation: https://jsonapi.org/
     """
 
@@ -104,14 +112,14 @@ class JSONAPIComponent(Component):
             if index is not None:
                 pointers.append(str(index))
 
-            is_relationship = False  # getattr(schema, field_name) or something
+            is_relationship = False  # TBD
             if is_relationship:
                 pointers.append('relationships')
             elif field_name != 'id':
                 pointers.append('attributes')
 
             pointers.append(field_name)
-            # pointers.append(schema._inflect(field_name))
+            # pointers.append(schema._inflect(field_name))  # TBD
 
             if is_relationship:
                 pointers.append('data')

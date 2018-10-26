@@ -11,24 +11,27 @@ from flask_router import Component, Handler, Include, Route, Router
 # Create some controller that takes a handler and does something useful
 # with it.  A handler is the final, decoratored instance.  You should
 # focus your effort on making these controllers as generic as possible.
-#
-# See "examples/efficient_usage.py" for additional implementation
-# details.
 def create_user(handler, **uri_args):
     user = handler.create()
     return str(user)
 
 
-# Handlers.
+# Create some "Handler" which implements the most generalized behavior
+# of your application.
 class MyHandler(Handler):
 
     def create(self):
-        return {'hello': 'world'}
+        return {}
 
 
-# Components.
+# Create some "Component" classes which decorate your application's
+# behavior with more specialized business logic.
 class A(Component):
-    pass
+
+    def create(self):
+        result = self.parent.create()
+        result['A'] = False
+        return result
 
 
 class B(Component):
@@ -39,23 +42,22 @@ class B(Component):
         return result
 
 
-# Route definition.
-route = Include('/users', [
-    Route('/<id>', create_user, handler=MyHandler, components=[B])],
-    components=[A])
-
-
-# Initialize your flask app.
-app = Flask(__name__)
+# Create a route structure which composes your components in some novel
+# way.  The below code can be thought to evaluate to:
+#
+#   components = A(B(MyHandler()))
+#   return create_user(components, **uri_args)
+route = Route('/<id>', create_user, handler=MyHandler, components=[B])
+route = Include('/users', routes=[route], components=[A])
 
 
 # Initialize the router with your app and add the routes.
+app = Flask(__name__)
 api = Router(app)
 api.add_routes([route])
 
 
-# Confirm everything works.
 with app.app_context():
     client = app.test_client()
-    get = client.get('/users/1')
+    get = client.get('/users/1')  # {'A': False, 'B': True}
     print(get.data.decode('utf-8'))
