@@ -1,28 +1,22 @@
-from setuptools import find_packages, setup
+import setuptools
 
 
-setup(
+with open('README.md', 'r') as f:
+    long_description = f.read()
+
+
+setuptools.setup(
     name='flask_router',
     version='0.1.0',
-    url='https://github.com/cmanallen/flask_router',
-    license='MIT',
     author='Colton Allen',
     author_email='colton.allen@caxiam.com',
-    long_description=__doc__,
-    packages=find_packages(exclude=("tests*", "examples*")),
-    package_dir={'flask_router': 'flask_router'},
-    zip_safe=False,
-    include_package_data=True,
-    platforms='any',
-    install_requires=['flask'],
+    description='A flask routing library.',
+    long_description=long_description,
+    url='https://github.com/cmanallen/flask_router',
+    packages=setuptools.find_packages(),
     classifiers=[
-        'Environment :: Web Environment',
-        'Intended Audience :: Developers',
+        'Programming Language :: Python :: 3',
         'License :: OSI Approved :: MIT License',
         'Operating System :: OS Independent',
-        'Programming Language :: Python',
-        'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
-        'Topic :: Software Development :: Libraries :: Python Modules'
     ],
-    test_suite='tests'
 )
