@@ -1,19 +1,18 @@
-## Flask Router
+## Flask Compose
 
 A simple router that promotes component driven endpoint design.
 
 #### Installation
 
 ```bash
-$ cd flask_router
-$ pip install .
+$ pip install flask-compose
 ```
 
 #### Getting Started
 
 Please explore the "examples" directory for more detailed samples.
 
-`flask-router` can be applied to any `flask` application without consideration for any existing routing libraries.  `flask-router`, at its core, is a glorified call to `Flask.add_url_rule`.
+`flask-compose` can be applied to any `flask` application without consideration for any existing routing libraries.  `flask-compose`, at its core, is a glorified call to `Flask.add_url_rule`.
 
 Creating a route is as simple as defining a few types:
 
