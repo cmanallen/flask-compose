@@ -5,6 +5,7 @@ name = "pypi"
 
 [packages]
 flask = "*"
+flask-compose = {editable = true, path = "."}
 
 [dev-packages]
 nose = "*"

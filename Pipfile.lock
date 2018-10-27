@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "366515b6a6548079648648bb4c92ab75054c1f5d7af21a5680e78e2e4f498731"
+            "sha256": "518503254b6bd41109d30a3706ec9359b312fe9fcb7c279eda5c1e3ef1d24be4"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -30,6 +30,10 @@
             ],
             "index": "pypi",
             "version": "==1.0.2"
+        },
+        "flask-compose": {
+            "editable": true,
+            "path": "."
         },
         "itsdangerous": {
             "hashes": [
