@@ -18,7 +18,7 @@ Creating a route is as simple as defining a few types:
 
 ```python
 from flask import Flask
-from flask_router import Component, Handler, Include, Route, Router
+from flask_compose import Component, Handler, Include, Route, Router
 
 
 # Handler
