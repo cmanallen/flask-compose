@@ -63,7 +63,7 @@ REST resources have well known behaviors that rarely deviate on a per resource b
 
 #### Philosophy
 
-This library encourages the use of the "Decorator Design Pattern".  Not to be confused with Python's decorators, the "Decorator Design Pattern" is an object-oriented approach to annotating behavior.  The naming of these two concepts is not coincidental.  Python's decorators describe on a function-based level what the "Decorator Design Pattern" describes on an object-based level.
+This library encourages the use of the "Decorator Design Pattern".  Not to be confused with Python's decorators, the "Decorator Design Pattern" is an object-oriented approach to dynamically extending behavior.  The naming of these two concepts is not coincidental.  Python's decorators describe on a function-based level what the "Decorator Design Pattern" describes on an object-based level.
 
 #### Credits
 
