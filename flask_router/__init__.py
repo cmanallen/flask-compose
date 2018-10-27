@@ -132,13 +132,11 @@ class Route(RouteLike):
         if not name:
             name = path + self.method
 
-        # Reverse the components.
-        components = list(reversed(components))
-
         # Construct a function with the components pre-specified.
         view = dispatch_request
         view = functools.partial(
-            view, fn=self.controller, handler=handler, components=components)
+            view, fn=self.controller, handler=handler,
+            components=list(reversed(components)))
 
         # Wrap the view with middleware. The first middleware in the
         # list is the last middleware applied.

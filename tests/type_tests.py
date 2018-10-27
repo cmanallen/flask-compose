@@ -70,4 +70,4 @@ class TypeTestCase(TestCase):
             self.assertTrue(uri_args['a'] == 1)
             self.assertTrue(uri_args['b'] == 2)
 
-        dispatch_request(controller, Handler, [A, B], a=1, b=2)
+        dispatch_request(controller, Handler, [B, A], a=1, b=2)
