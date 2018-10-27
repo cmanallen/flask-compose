@@ -1,11 +1,11 @@
-"""Basic flask_router usage.
+"""Basic flask_compose usage.
 
-To run this module please install flask and flask_router.
+To run this module please install flask and flask_compose.
     `$ pip install flask`
     `$ pip install .`
 """
 from flask import Flask
-from flask_router import Component, Handler, Include, Route, Router
+from flask_compose import Component, Handler, Include, Route, Router
 
 
 # Create some controller that takes a handler and does something useful

@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from flask_router import Include, Route
+from flask_compose import Include, Route
 
 
 class IncludeTestCase(TestCase):

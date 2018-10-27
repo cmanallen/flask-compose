@@ -13,7 +13,7 @@ Restricting access to business logic can be important when you want to
 ensure your team obeys a certain standard.
 """
 from flask import abort, request
-from flask_router import Handler, Route
+from flask_compose import Handler, Route
 
 from app.common import db
 

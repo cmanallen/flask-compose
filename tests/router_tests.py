@@ -1,7 +1,7 @@
 from unittest import TestCase
 
 from flask import Flask
-from flask_router import Include, Route, Router, Rule
+from flask_compose import Include, Route, Router, Rule
 
 
 class Handler: pass

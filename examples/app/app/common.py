@@ -1,5 +1,5 @@
 from flask import Flask
-from flask_router import Router
+from flask_compose import Router
 from flask_sqlalchemy import SQLAlchemy
 
 

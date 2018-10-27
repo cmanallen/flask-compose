@@ -3,7 +3,7 @@
 Reading this module from bottom-to-top will add clarity to the
 composition of the routes.
 """
-from flask_router import Include
+from flask_compose import Include
 
 from app.components import (
     ActiveUserComponent, UserComponent, UserEmailComponent, UserPhoneComponent,

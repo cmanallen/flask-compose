@@ -1,7 +1,7 @@
 from functools import partial
 from unittest import TestCase
 
-from flask_router import Component, Include, Route, dispatch_request
+from flask_compose import Component, Include, Route, dispatch_request
 
 
 class Handler: pass

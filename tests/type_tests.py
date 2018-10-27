@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from flask_router import Component, dispatch_request
+from flask_compose import Component, dispatch_request
 
 
 class Handler:

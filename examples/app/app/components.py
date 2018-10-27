@@ -4,7 +4,7 @@ This module contains our application's composable business logic.  This
 code can be broadly applicable or highly specialized.
 """
 from flask import request
-from flask_router import Component
+from flask_compose import Component
 
 from app.models import UserModel, UserEmailModel, UserPhoneModel
 from app.schemas import UserSchema, UserEmailSchema, UserPhoneSchema
