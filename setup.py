@@ -7,7 +7,7 @@ with open('README.md', 'r') as f:
 
 setuptools.setup(
     name='flask_compose',
-    version='0.1.0',
+    version='0.2.0',
     author='Colton Allen',
     author_email='colton.allen@caxiam.com',
     description='A routing library for flask applications obeying the "Decorator Design Pattern".',
