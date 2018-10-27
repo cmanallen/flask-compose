@@ -15,7 +15,7 @@ ensure your team obeys a certain standard.
 from flask import abort, request
 from flask_router import Handler, Route
 
-from common import db
+from app.common import db
 
 import functools
 import json

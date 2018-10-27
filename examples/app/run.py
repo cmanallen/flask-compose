@@ -1,5 +1,5 @@
-from common import app, db
-from models import *
+from app.common import app, db
+from app.models import *
 
 
 if __name__ == '__main__':

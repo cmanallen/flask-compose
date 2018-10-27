@@ -6,8 +6,8 @@ code can be broadly applicable or highly specialized.
 from flask import request
 from flask_router import Component
 
-from models import UserModel, UserEmailModel, UserPhoneModel
-from schemas import UserSchema, UserEmailSchema, UserPhoneSchema
+from app.models import UserModel, UserEmailModel, UserPhoneModel
+from app.schemas import UserSchema, UserEmailSchema, UserPhoneSchema
 
 import collections
 

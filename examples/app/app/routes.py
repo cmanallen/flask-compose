@@ -5,12 +5,12 @@ composition of the routes.
 """
 from flask_router import Include
 
-from components import (
+from app.components import (
     ActiveUserComponent, UserComponent, UserEmailComponent, UserPhoneComponent,
     UserUpdateComponent, JSONAPIComponent)
-from controllers import (
+from app.controllers import (
     BrowseRoute, CreateRoute, GetRoute, UpdateRoute, DeleteRoute)
-from middleware import render_response
+from app.middleware import render_response
 
 
 # User routes.

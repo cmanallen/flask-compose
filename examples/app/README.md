@@ -9,7 +9,12 @@ $ pip install -r requirements.txt
 #### Run Server
 
 ```bash
-$ python __init__.py
+$ # tty1
+$ python examples/app/run.py
+
+$ # tty2
+$ curl localhost:5000/v1/users/1/emails
+$ curl localhost:5000/v2/users/1/emails
 ```
 
 #### How To Read This Module
